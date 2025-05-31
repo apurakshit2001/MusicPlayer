@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced 3D Audio Visualizer with Three.js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Three.js container -->
+  <div id="three-js-container"></div>
+
+  <!-- Audio player container -->
+  <div class="audio-container">
+    <audio id="audio" controls>
+      <source src="./Songs/english/Toxicity.mp3" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+    <div class="audio-info">
+      <p><strong>Track:</strong> <span id="current-track">---</span></p>
+    </div>
+    <div class="controls">
+      <button class="control-btn" onclick="previousSong()" title="Previous Song">
+        <i class='bx bx-skip-previous'></i>
+      </button>
+      <button class="control-btn" onclick="toggleVisualizer()" title="Toggle Visualizer">
+        <i class='bx bx-pulse'></i>
+      </button>
+      <button class="control-btn" onclick="changeParticleColor()" title="Change Color">
+        <i class='bx bx-palette'></i>
+      </button>
+      <button class="control-btn" onclick="toggleCameraOrbit()" title="Toggle Orbit">
+        <i class='bx bx-planet'></i>
+      </button>
+      <button class="control-btn" onclick="changeParticleShape()" title="Change Shape">
+        <i class='bx bx-cube'></i>
+      </button>
+      <button class="control-btn" onclick="nextSong()" title="Next Song">
+        <i class='bx bx-skip-next'></i>
+      </button>
+    </div>
+    <!-- Added dropdown and song list -->
+    <div class="playlist-container">
+      <select id="language-select" onchange="updateSongList()">
+        <option value="bengali">Bengali</option>
+        <option value="english" selected>English</option>
+        <option value="hindi">Hindi</option>
+      </select>
+      <div class="song-list" id="song-list">
+        <!-- Songs will be populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Visualizer canvas -->
+  <canvas id="visualizer"></canvas>
+
+<script src="./script.js"></script>
+</body>
+</html>

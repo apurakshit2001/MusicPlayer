@@ -1,0 +1,152 @@
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #000000, #1a1a1a);
+      overflow: hidden;
+      height: 100vh;
+      font-family: 'Arial', sans-serif;
+    }
+
+    #three-js-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .audio-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 280px;
+    }
+
+    audio {
+      width: 100%;
+      outline: none;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .audio-info {
+      text-align: center;
+      color: #fff;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .audio-info p {
+      margin: 4px 0;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .control-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(0, 123, 255, 0.7);
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn:hover {
+      background: rgba(0, 86, 179, 0.7);
+    }
+
+    .control-btn i {
+      font-size: 20px;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* Added CSS for dropdown and song list */
+    .playlist-container {
+      width: 100%;
+      margin-top: 10px;
+    }
+
+    select {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      font-size: 14px;
+      cursor: pointer;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    select option {
+      background: #1a1a1a;
+      color: #fff;
+    }
+
+    .song-list {
+      max-height: 150px;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 10px;
+    }
+
+    .song {
+      padding: 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .song:hover, .song.active {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .song-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .song-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+
+    .song-list::-webkit-scrollbar-thumb {
+      background: rgba(0, 123, 255, 0.7);
+      border-radius: 8px;
+    }
+
+    .song-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 86, 179, 0.7);
+    }

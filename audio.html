@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced 3D Audio Visualizer with Three.js</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(180deg, #000000, #1a1a1a);
+      overflow: hidden;
+      height: 100vh;
+      font-family: 'Arial', sans-serif;
+    }
+
+    #three-js-container {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    .audio-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 8px 32px rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 280px;
+    }
+
+    audio {
+      width: 100%;
+      outline: none;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .audio-info {
+      text-align: center;
+      color: #fff;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .audio-info p {
+      margin: 4px 0;
+    }
+
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .control-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 8px;
+      background: rgba(0, 123, 255, 0.7);
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn:hover {
+      background: rgba(0, 86, 179, 0.7);
+    }
+
+    .control-btn i {
+      font-size: 20px;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Three.js container -->
+  <div id="three-js-container"></div>
+
+  <!-- Audio player container -->
+  <div class="audio-container">
+    <audio id="audio" controls>
+      <source src="./Nam.mp3" type="audio/mpeg">
+      Your browser does not support the audio element.
+    </audio>
+    <div class="audio-info">
+      <p><strong>Track:</strong> Toxicity</p>
+      <p><strong>Artist:</strong> System Of A Down</p>
+    </div>
+    <div class="controls">
+      <button class="control-btn" onclick="toggleVisualizer()" title="Toggle Visualizer">
+        <i class='bx bx-pulse'></i>
+      </button>
+      <button class="control-btn" onclick="changeParticleColor()" title="Change Color">
+        <i class='bx bx-palette'></i>
+      </button>
+      <button class="control-btn" onclick="toggleCameraOrbit()" title="Toggle Orbit">
+        <i class='bx bx-planet'></i>
+      </button>
+      <button class="control-btn" onclick="changeParticleShape()" title="Change Shape">
+        <i class='bx bx-cube'></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Visualizer canvas -->
+  <canvas id="visualizer"></canvas>
+
+  <script>
+    // Three.js setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.getElementById("three-js-container").appendChild(renderer.domElement);
+
+    // Particle system
+    const particleCount = 1000;
+    const particles = new THREE.BufferGeometry();
+    const positions = new Float32Array(particleCount * 3);
+    const colors = new Float32Array(particleCount * 3);
+    const basePositions = new Float32Array(particleCount * 3);
+
+    for (let i = 0; i < particleCount; i++) {
+      const x = (Math.random() - 0.5) * 100;
+      const y = (Math.random() - 0.5) * 100;
+      const z = (Math.random() - 0.5) * 100;
+      positions[i * 3] = x;
+      positions[i * 3 + 1] = y;
+      positions[i * 3 + 2] = z;
+      basePositions[i * 3] = x;
+      basePositions[i * 3 + 1] = y;
+      basePositions[i * 3 + 2] = z;
+      colors[i * 3] = 1;
+      colors[i * 3 + 1] = 1;
+      colors[i * 3 + 2] = 1;
+    }
+
+    particles.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+    particles.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+    const particleMaterial = new THREE.PointsMaterial({
+      size: 0.5,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.8
+    });
+    let particleSystem = new THREE.Points(particles, particleMaterial);
+    scene.add(particleSystem);
+
+    // Camera positioning
+    camera.position.z = 50;
+
+    // Orbit controls
+    let isOrbiting = false;
+    let angle = 0;
+
+    // Shape control
+    let currentShapeIndex = 0;
+    const shapes = [
+      new THREE.BoxGeometry(0.5, 0.5, 0.5),
+      new THREE.SphereGeometry(0.3, 16, 16),
+      new THREE.TetrahedronGeometry(0.4),
+      new THREE.TorusGeometry(0.3, 0.1, 16, 32)
+    ];
+
+    // Audio visualizer setup
+    let visualizerActive = true;
+    let particleColor = new THREE.Color(1, 1, 1);
+    const audio = document.getElementById("audio");
+    const canvas = document.getElementById("visualizer");
+    const ctx = canvas.getContext("2d");
+    let audioContext, analyser, dataArray, source;
+
+    // Set canvas size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    audio.addEventListener("play", () => {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 256;
+        dataArray = new Uint8Array(analyser.frequencyBinCount);
+        source = audioContext.createMediaElementSource(audio);
+        source.connect(analyser);
+        analyser.connect(audioContext.destination);
+      }
+
+      if (audioContext.state === "suspended") {
+        audioContext.resume();
+      }
+
+      animate();
+    });
+
+    // Toggle visualizer
+    function toggleVisualizer() {
+      visualizerActive = !visualizerActive;
+      if (!visualizerActive) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+
+    // Change particle color
+    function changeParticleColor() {
+      const colorsList = [
+        new THREE.Color(1, 0, 0),
+        new THREE.Color(0, 1, 0),
+        new THREE.Color(0, 0, 1),
+        new THREE.Color(1, 0, 1),
+        new THREE.Color(0, 1, 1),
+        new THREE.Color(1, 1, 1)
+      ];
+      particleColor = colorsList[Math.floor(Math.random() * colorsList.length)];
+
+      // Update the colors array
+      for (let i = 0; i < particleCount; i++) {
+        colors[i * 3] = particleColor.r;
+        colors[i * 3 + 1] = particleColor.g;
+        colors[i * 3 + 2] = particleColor.b;
+      }
+
+      if (particleSystem instanceof THREE.Points) {
+        particleSystem.geometry.attributes.color.needsUpdate = true;
+      } else if (particleSystem instanceof THREE.InstancedMesh) {
+        const color = new THREE.Color();
+        for (let i = 0; i < particleCount; i++) {
+          color.setRGB(colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2]);
+          particleSystem.setColorAt(i, color);
+        }
+        particleSystem.instanceColor.needsUpdate = true;
+      }
+    }
+
+    // Toggle camera orbit
+    function toggleCameraOrbit() {
+      isOrbiting = !isOrbiting;
+    }
+
+    // Change particle shape
+    function changeParticleShape() {
+      scene.remove(particleSystem);
+      currentShapeIndex = (currentShapeIndex + 1) % shapes.length;
+
+      if (currentShapeIndex === 0) {
+        // Revert to Points for the first shape (original particles)
+        particleSystem = new THREE.Points(particles, particleMaterial);
+      } else {
+        // Use InstancedMesh for other shapes
+        const geometry = shapes[currentShapeIndex];
+        const material = new THREE.MeshBasicMaterial({
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.8
+        });
+        particleSystem = new THREE.InstancedMesh(geometry, material, particleCount);
+
+        // Initialize instanceColor
+        particleSystem.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(particleCount * 3), 3);
+        const matrix = new THREE.Matrix4();
+        const color = new THREE.Color();
+        for (let i = 0; i < particleCount; i++) {
+          matrix.setPosition(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+          particleSystem.setMatrixAt(i, matrix);
+          color.setRGB(colors[i * 3], colors[i * 3 + 1], colors[i * 3 + 2]);
+          particleSystem.setColorAt(i, color);
+        }
+        particleSystem.instanceMatrix.needsUpdate = true;
+        particleSystem.instanceColor.needsUpdate = true;
+      }
+
+      scene.add(particleSystem);
+      // Apply current color to new shape
+      changeParticleColor();
+    }
+
+    function animate() {
+      analyser.getByteFrequencyData(dataArray);
+      const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+      // Update particles
+      if (particleSystem instanceof THREE.InstancedMesh) {
+        const matrix = new THREE.Matrix4();
+        for (let i = 0; i < particleCount; i++) {
+          const index = i * 3;
+          const freq = dataArray[i % dataArray.length] / 255;
+          const x = basePositions[index] + Math.cos(Date.now() * 0.001 + i) * freq * 5;
+          const y = basePositions[index + 1] + Math.sin(Date.now() * 0.001 + i) * freq * 5;
+          const z = basePositions[index + 2];
+          matrix.setPosition(x, y, z);
+          particleSystem.setMatrixAt(i, matrix);
+        }
+        particleSystem.instanceMatrix.needsUpdate = true;
+      } else {
+        const positions = particleSystem.geometry.attributes.position.array;
+        for (let i = 0; i < particleCount; i++) {
+          const index = i * 3;
+          const freq = dataArray[i % dataArray.length] / 255;
+          positions[index + 1] = basePositions[index + 1] + Math.sin(Date.now() * 0.001 + i) * freq * 5;
+          positions[index] = basePositions[index] + Math.cos(Date.now() * 0.001 + i) * freq * 5;
+        }
+        particleSystem.geometry.attributes.position.needsUpdate = true;
+        particleMaterial.size = Math.max(0.3, avg / 100);
+      }
+
+      // Orbit camera
+      if (isOrbiting) {
+        angle += 0.005;
+        camera.position.x = Math.sin(angle) * 50;
+        camera.position.z = Math.cos(angle) * 50;
+        camera.lookAt(0, 0, 0);
+      }
+
+      // Draw waveform on canvas
+      if (visualizerActive) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.beginPath();
+        ctx.strokeStyle = `#${particleColor.getHexString()}`;
+        ctx.lineWidth = 3;
+
+        const sliceWidth = canvas.width / dataArray.length;
+        let x = 0;
+
+        for (let i = 0; i < dataArray.length; i++) {
+          const v = dataArray[i] / 128.0;
+          const y = (v * canvas.height) / 4 + canvas.height / 2;
+
+          if (i === 0) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+
+          x += sliceWidth;
+        }
+
+        ctx.stroke();
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+  </script>
+</body>
+</html>
