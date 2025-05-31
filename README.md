@@ -4,7 +4,7 @@
 
 Welcome to the **Music Player Web App** – a sleek, modern, and responsive music streaming interface built for seamless user experience and vibrant audio engagement. Built with a love for clean UI and functional design, this app delivers a lightweight and interactive way to enjoy your favorite tracks.
 
-🌐 **Live Demo**: [Click here to try it out!](https://apurakshit2001.github.io/MusicPlayer/)
+🌐 **Live Demo**: [Click here to try it out!](https://musicplayer-orbit.netlify.app/)
 
 ---
 
